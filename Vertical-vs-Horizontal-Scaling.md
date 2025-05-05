@@ -1,7 +1,5 @@
 # Scaling Systems: Vertical vs Horizontal Scaling
 
----
-
 ## What Is Scaling?
 
 Scaling refers to increasing a system’s **capacity to handle more load**, such as more users, more data, or higher traffic. This is achieved by adding more computing power. There are two main strategies:
@@ -150,11 +148,9 @@ Horizontal scaling is better for web applications, microservices, cloud-native s
 * Modern systems often use **a combination of both**, depending on the workload and growth stage.
 
 
-
+---
 
 # Consistent Hashing: Why It’s Needed and How It Solves Real Problems
-
----
 
 ## Background: Naive Hashing With Modulo
 
@@ -427,3 +423,83 @@ To avoid uneven load (especially when hash values cluster), each physical server
 | Use Cases              | Caching, sharding, load routing, storage systems   |
 
 ---
+
+## **Consistent Hashing in Distributed Systems**
+
+### **What is Consistent Hashing?**
+
+Consistent hashing is a technique used in distributed systems to efficiently distribute data (or requests) across multiple nodes (servers) while minimizing data movement when the system is scaled up or down. It is often used in scenarios such as caching and load balancing.
+
+### **How Does Consistent Hashing Work?**
+
+In consistent hashing, both **requests** and **nodes** (servers) are hashed using a hash function. These hashed values are then arranged in a circular way, called a "hash ring".
+
+1. **Hashing Requests:** Each incoming request (or data) is hashed to a particular position on the ring based on its unique key.
+2. **Hashing Nodes:** Each node (server) is also hashed to a position on the ring.
+3. **Routing Requests:** Once a request is hashed, it is routed to the **nearest node** in the circular hash ring. If a new server is added or an existing one is removed, only a small subset of the requests need to be rerouted.
+
+This method minimizes the amount of data that needs to be moved when nodes are added or removed, addressing the problem of data redistribution.
+
+### **What Happens When Nodes Are Added or Removed?**
+
+1. **Adding a New Node:**
+   When a new node is added to the system, it is hashed to a new position on the ring. Only the requests that were previously routed to nodes closest to the new node will be redirected to this node.
+
+   This allows for smooth scaling with minimal disruption, as only a small portion of the requests are affected.
+
+2. **Removing a Node:**
+   When a node is removed from the system, the requests that were being routed to that node are now directed to the next closest node on the hash ring. This process avoids the need to remap all the data across the system.
+
+   The number of changes to the routing system is minimal, which is one of the key advantages of consistent hashing.
+
+### **What is the Role of Cache in Consistent Hashing?**
+
+Caching is a common challenge in distributed systems, especially when nodes are added or removed.
+
+* **Cache Misses:** If a request that was previously served by one node is now routed to another due to the addition or removal of a node, a cache miss occurs. The cache data held by the old node is no longer accessible, leading to potentially increased latency and resource usage.
+* **Distributed Caching:** To address this, **distributed caching** systems such as **Redis** or **Memcached** are commonly used. These systems store cache data across multiple nodes, ensuring that even if one node fails or is removed, the cached data is still available from another node.
+
+### **What is a Node in the Context of Consistent Hashing?**
+
+In consistent hashing, a **node** refers to any unit (physical server, virtual machine, or container) that participates in storing and processing data. The term "node" is used to represent any machine in the system, whether it's a physical machine, virtual machine, or container.
+
+### **What Happens When Data Is Cached on a Node and That Node Is Removed?**
+
+When a node is removed and it holds cached data, the cached data is lost. However, distributed caching systems ensure that the data is replicated across nodes, reducing the risk of data loss. When a new node is added, it may start caching data for the requests routed to it, and previous cache data may be reloaded if necessary.
+
+### **How Does Consistent Hashing Solve Scalability Issues?**
+
+One of the key benefits of consistent hashing is its ability to handle scalability efficiently. When nodes are added or removed from the system:
+
+* Only a small subset of the requests need to be re-routed, avoiding the costly process of redistributing all data across the system.
+* This provides smooth scaling in response to changes in load.
+
+### **How Does Consistent Hashing Ensure Load Balancing?**
+
+Consistent hashing naturally provides a form of **load balancing** by distributing requests across the nodes based on their hash values. When a new node is added, it automatically picks up requests that are closest to it on the hash ring, balancing the load.
+
+### **What Are the Main Challenges with Consistent Hashing?**
+
+1. **Cache Misses:** The main issue arises when nodes that held cached data are removed or when requests are routed to new nodes. A cache miss occurs, leading to a delay in fetching data.
+2. **Data Rebalancing:** While adding or removing nodes reduces the amount of data that needs to be redistributed, some level of rebalancing is always necessary, which can increase network traffic and cause performance issues temporarily.
+3. **Hot Keys:** Certain keys might hash to the same server repeatedly, causing an imbalance in load distribution across the system.
+4. **Scalability Limitations:** Adding or removing nodes may not scale seamlessly when the system becomes very large, leading to additional complexity in managing the hash ring.
+
+### **What is a Hot Key in Consistent Hashing?**
+
+A **hot key** refers to a key that consistently hashes to the same node, causing that node to receive a disproportionate amount of requests. This leads to an imbalance in the system. Techniques like **virtual nodes** (hashing multiple positions for each server) can help mitigate this issue by distributing the load more evenly across the nodes.
+
+### **How to Mitigate Cache Misses and Data Rebalancing?**
+
+1. **Distributed Caching:** By using systems like Redis, data can be cached across multiple nodes, reducing the impact of cache misses when nodes are added or removed.
+2. **Replication:** Replicating data across multiple nodes ensures that even if a node fails or is removed, the data is still available from another node.
+3. **Virtual Nodes:** Using virtual nodes (multiple hash values for each physical node) helps improve the distribution of requests and reduces the chance of hot keys.
+
+### **Summary of Key Concepts in Consistent Hashing:**
+
+* **Hashing:** A method of converting the request and server into hash values, which are then placed on a hash ring.
+* **Ring:** The circular structure where both requests and servers are mapped.
+* **Routing:** Requests are routed to the nearest server in the circular ring.
+* **Scaling:** Adding or removing nodes causes minimal disruption by only rerouting a small subset of requests.
+* **Caching:** Distributed caching helps mitigate the issue of cache misses when nodes are added or removed.
+* **Load Balancing:** Consistent hashing provides a natural way to balance load across multiple nodes.

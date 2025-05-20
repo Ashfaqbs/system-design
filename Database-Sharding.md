@@ -212,3 +212,101 @@ Some modern databases offer **limited or eventual consistency** for performance 
 **Summary**: Full ACID across shards is non-trivial and often avoided in favor of **eventual consistency** or **application-managed consistency**.
 
 ---
+
+### 1. **How does routing happen in a sharded database?**
+
+In a sharded system with five servers (shards), each shard holds a part of the data based on a **sharding key** (e.g., `user_id`). When a user sends a query, the system needs to figure out which shard holds the relevant data and route the query there.
+
+**Let's break it down:**
+
+Imagine five shards (Server 1 to Server 5) and some data. Let’s assume the data is users, and the sharding key is the `user_id`.
+
+* **Shards and data:**
+
+  * **Server 1**: user IDs 1–100
+  * **Server 2**: user IDs 101–200
+  * **Server 3**: user IDs 201–300
+  * **Server 4**: user IDs 301–400
+  * **Server 5**: user IDs 401–500
+
+Now, if a user with `user_id = 250` queries for their data, the system uses the `user_id` to figure out that **Server 3** holds this data (since the `user_id = 250` falls within 201–300).
+
+The routing process works like this:
+
+* The system looks at the `user_id` in the query.
+* It uses the **sharding key** (here, the `user_id`) to calculate which shard the data belongs to.
+* The query is routed directly to **Server 3** where the data for `user_id = 250` resides.
+
+**Routing logic:**
+
+* If the query needs to find a user, the system simply checks the `user_id` and maps it to the appropriate shard using the sharding key.
+* This way, only the relevant shard is queried, not all five.
+
+---
+
+### 2. **How is ACID maintained across a single shard and not across multiple shards?**
+
+In a **single shard** system, ACID properties (Atomicity, Consistency, Isolation, Durability) can be easily maintained because all the data for that shard is in one place, and transactions happen within that shard.
+
+However, across **multiple shards**, maintaining ACID becomes difficult, particularly **Atomicity** and **Consistency**.
+
+#### Example with 5 Shards:
+
+Let’s say we have a transaction where **two updates** need to happen at once:
+
+1. Update `user_id = 100` on **Shard 1**.
+2. Update `user_id = 250` on **Shard 3**.
+
+In a **single-shard** setup:
+
+* The transaction will either **succeed or fail** as a whole. If the update on **Shard 1** fails, the system can roll back both updates, ensuring Atomicity.
+
+In a **multi-shard** setup:
+
+* If the update on **Shard 1** succeeds, but the update on **Shard 3** fails, the system cannot guarantee Atomicity across the shards because the data is distributed.
+* This leads to **eventual consistency** where one shard might reflect the change before another.
+
+In multi-sharded systems, achieving **true ACID** across multiple shards is difficult because:
+
+* **Atomicity** is lost because transactions cannot be rolled back easily across shards.
+* **Consistency** is difficult to maintain because one shard might update before others.
+
+---
+
+### 3. **Understanding the CAP Theorem**
+
+The **CAP theorem** explains the trade-offs between **Consistency**, **Availability**, and **Partition Tolerance** in distributed systems. The theorem states that in a distributed database, it is impossible to achieve all three simultaneously. You can achieve at most two of the following:
+
+* **Consistency (C):** Every read gets the most recent write.
+* **Availability (A):** Every request gets a response, but it might not be the most recent data.
+* **Partition Tolerance (P):** The system continues to operate even if some parts of it cannot communicate.
+
+Here’s how it works with examples:
+
+#### 1. **CA (Consistency + Availability):**
+
+* **Scenario:** Achieving **Consistency** and **Availability** means the system always returns the most recent data, and every request will receive a response, but **Partition Tolerance** is sacrificed.
+* **What happens:** If there is a network partition, some parts of the system may be unable to communicate, causing those parts to stop working.
+* **Example:** A relational database where consistency and availability are more important than partition tolerance. A system like this might struggle if there’s a network failure between shards.
+
+#### 2. **CP (Consistency + Partition Tolerance):**
+
+* **Scenario:** The system ensures **Consistency** and **Partition Tolerance**, but sacrifices **Availability**.
+* **What happens:** During a network partition, the system will refuse to answer requests until it can ensure that all nodes have consistent data.
+* **Example:** A system like HBase or MongoDB can focus on ensuring that data is consistent and available after a partition, but if there's a network failure, it might stop responding to queries altogether.
+
+#### 3. **AP (Availability + Partition Tolerance):**
+
+* **Scenario:** The system ensures **Availability** and **Partition Tolerance**, but sacrifices **Consistency**.
+* **What happens:** The system will continue operating even during network partitions, but the data might not be up-to-date or consistent across all nodes.
+* **Example:** In a system like Cassandra, even if there is a network issue, it will still respond to queries, but the data might not be the most recent or consistent across all nodes.
+
+---
+
+**To summarize the CAP Theorem:**
+
+* **C:** Always return the latest data, but may sacrifice availability if a partition occurs.
+* **A:** Always respond to queries, even if it means returning stale data during partitions.
+* **P:** Continue operating during partitions, but either availability or consistency may be compromised.
+
+---

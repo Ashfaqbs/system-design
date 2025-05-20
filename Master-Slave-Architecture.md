@@ -104,3 +104,95 @@ This design supports **read scalability**, **fault tolerance**, and **data redun
 * **Lag monitoring** is critical to ensure slaves are up-to-date.
 
 ---
+Here is an extended section covering **Master-Slave (Leader-Follower) architecture** usage in **Kubernetes, Apache Pulsar, and Apache Flink**, following documentation style:
+
+---
+
+
+
+## Master-Slave / Leader-Follower Architecture in Modern Systems
+
+### Kubernetes (K8s)
+
+**Architecture Usage:**
+Kubernetes uses a **leader-election mechanism** primarily within its control plane components, especially among **kube-controller-manager** instances.
+
+| Component                 | Role of Leader/Follower                                                     |
+| ------------------------- | --------------------------------------------------------------------------- |
+| `kube-controller-manager` | Multiple replicas run, but only one is active (leader) at a time.           |
+| `etcd`                    | Backend key-value store using **Raft** for leader election and consistency. |
+
+**Election Mechanism:**
+
+* Kubernetes uses a **lease-based election** via API server annotations (`configmaps` or `endpoints`) or etcd.
+* Only the elected controller-manager performs operations like node management, deployment rollouts, etc.
+* `etcd` uses the **Raft consensus algorithm** to elect a leader for consistent data access across cluster members.
+
+**Purpose Solved:**
+
+* Prevents split-brain in control logic.
+* Ensures only one instance manages critical cluster state updates.
+
+---
+
+### Apache Pulsar
+
+**Architecture Usage:**
+Pulsar uses a **multi-layered architecture** with leader-follower patterns in its components:
+
+| Component      | Role of Leader/Follower                                                             |
+| -------------- | ----------------------------------------------------------------------------------- |
+| **BookKeeper** | Handles storage; uses `Bookie` nodes with optional leader logic.                    |
+| **ZooKeeper**  | Coordinates Pulsar clusters, manages leader election.                               |
+| **Brokers**    | Stateless, but ZooKeeper assigns **topic ownership** to brokers (leader per topic). |
+
+**Election Mechanism:**
+
+* **ZooKeeper** elects leaders among **brokers** to assign partitions and topics.
+* **BookKeeper** doesn’t strictly use master-slave, but data is written to a **quorum** of bookies and read from a subset.
+* **Segment Ownership** behaves like partition-level leadership.
+
+**Purpose Solved:**
+
+* Ensures high availability of topic ownership.
+* Supports automatic rebalancing and failover of topic assignment.
+
+---
+
+### Apache Flink
+
+**Architecture Usage:**
+Flink’s architecture includes a **JobManager (master)** and **TaskManagers (slaves)**.
+
+| Component       | Role                                                             |
+| --------------- | ---------------------------------------------------------------- |
+| **JobManager**  | Acts as master, handles scheduling, checkpointing, coordination. |
+| **TaskManager** | Executes tasks assigned by JobManager, acts like slaves.         |
+
+**High Availability:**
+
+* Multiple JobManagers can run in **HA mode** High Availability mode.
+* **ZooKeeper (or Kubernetes API)** coordinates leader election.
+* Only one JobManager is active at a time; others are passive standby.
+
+**Election Mechanism:**
+
+* JobManager leader is elected via ZooKeeper.
+* On failure, a standby JobManager is promoted.
+
+**Purpose Solved:**
+
+* Prevents single point of failure for job orchestration.
+* Ensures continuity in long-running data pipelines or streaming jobs.
+
+---
+
+## Summary: Modern Systems with Leader Election
+
+| System            | Uses Master-Slave / Leader-Follower? | Election Type        | Purpose Solved                         |
+| ----------------- | ------------------------------------ | -------------------- | -------------------------------------- |
+| **Kubernetes**    | Yes (control plane components)       | Lease/ZooKeeper/etcd | Ensures control-plane consistency      |
+| **Apache Pulsar** | Yes (Brokers, BookKeeper, ZooKeeper) | ZooKeeper            | Manages topic ownership & availability |
+| **Apache Flink**  | Yes (JobManagers & TaskManagers)     | ZooKeeper/K8s API    | Ensures failover for job scheduling    |
+
+---

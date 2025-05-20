@@ -159,3 +159,56 @@ Managing transactions across shards can be complex. Techniques include:
 Database sharding is a fundamental technique for achieving scalability and performance in modern applications. By partitioning data across multiple servers, it addresses the limitations of traditional databases, ensuring systems can handle growing demands efficiently.
 
 ---
+
+
+## Database Sharding – FAQ's
+
+---
+
+### Q1: If there are 10 million records and they are divided across 10 servers (1 million per node), does this help with horizontal scaling? Can each node follow a master-slave architecture for better fault tolerance?
+
+Yes. Distributing 10 million records across 10 servers—each handling 1 million records—is a form of **horizontal scaling**. This architecture allows the system to handle larger datasets and more concurrent queries by spreading the workload across multiple machines.
+
+Each server (or node) in the sharded cluster can be configured to use **replication**, such as **master-slave (primary-replica)** architecture. In this setup:
+
+* The **master node** handles write operations.
+* One or more **replica (slave) nodes** continuously pull updates from the master.
+* If the master fails, a **failover mechanism** can promote a replica to become the new master (auto-election), ensuring **high availability**.
+
+This combination of sharding and replication improves both scalability and fault tolerance.
+
+---
+
+### Q2: If a query is made across the entire 10 million records (spread across shards), will all servers be queried? How does the system decide which shard to query? Is an API Gateway involved?
+
+**Not all shards are always queried**, depending on the nature of the query and the sharding strategy:
+
+* **If the query includes the sharding key** (e.g., user ID, order ID), the system can route the query directly to the relevant shard. This avoids a full-cluster scan and improves efficiency.
+* **If the query lacks a sharding key**, or if it's a **global query** (e.g., full data scan or aggregation), the query is **broadcast** to all shards. The results are then aggregated and returned.
+
+The routing mechanism can be built into the **application layer**, the **database driver**, or managed via an **API Gateway** or **database proxy/router** like:
+
+* **MongoS** (for MongoDB)
+* **Vitess** (for MySQL)
+* **Citus** (for PostgreSQL)
+* **Custom-built query routers**
+
+An API Gateway is generally not responsible for directing database queries directly but may coordinate microservices that in turn talk to correct data partitions or backend databases.
+
+---
+
+### Q3: Does sharding support ACID transactions? If not, why?
+
+**ACID support in sharded environments is limited and complex.** Here's why:
+
+* **Atomicity**: Within a single shard, ACID is supported (if the underlying DB supports it).
+* **Cross-shard transactions** complicate atomicity because they span multiple nodes and may require distributed transaction coordination (e.g., 2PC – Two-Phase Commit).
+* **Consistency**: Difficult across shards without coordination, especially with concurrent updates.
+* **Isolation**: Isolation levels are shard-local unless explicitly managed globally.
+* **Durability**: Managed at the shard level through replication or WAL (Write-Ahead Logging).
+
+Some modern databases offer **limited or eventual consistency** for performance and scalability. Others, like **Google Spanner**, use advanced techniques (e.g., atomic clocks) to provide globally-consistent transactions across shards, but with trade-offs in latency and complexity.
+
+**Summary**: Full ACID across shards is non-trivial and often avoided in favor of **eventual consistency** or **application-managed consistency**.
+
+---

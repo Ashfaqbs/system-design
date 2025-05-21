@@ -274,6 +274,7 @@ In multi-sharded systems, achieving **true ACID** across multiple shards is diff
 ---
 
 ### 3. **Understanding the CAP Theorem**
+- Note: CAP is for distributed systems.
 
 The **CAP theorem** explains the trade-offs between **Consistency**, **Availability**, and **Partition Tolerance** in distributed systems. The theorem states that in a distributed database, it is impossible to achieve all three simultaneously. You can achieve at most two of the following:
 

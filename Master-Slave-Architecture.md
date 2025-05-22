@@ -1,6 +1,3 @@
-The canvas tool is currently unavailable, so the latest content has been prepared here instead:
-
----
 
 ## Master-Slave Architecture: Core Concepts
 

@@ -200,4 +200,147 @@ Redis handles this using **CRC16(key) % 16384** to determine which node should h
 | Redis Cluster (Distributed Cache) | Microservices, high scale, shared state  |
 | Hybrid (Local + Redis)            | Ultra-low latency, high reliability      |
 
+---
 
+##  **Additional Important Concepts in Distributed Caching**
+
+---
+
+### 1. **Data Serialization & Deserialization Overhead**
+
+#### Why It Matters:
+
+When writing/reading complex objects to/from Redis (which is a remote server), the data must be **serialized** (converted to byte stream) and later **deserialized** (converted back to object).
+
+#### Impacts:
+
+* Serialization format affects performance (e.g., JSON is slower than MsgPack or Kryo).
+* Large object trees can result in **slower deserialization**, especially under load.
+
+#### Best Practices:
+
+* Use lightweight formats (e.g., Kryo, Protocol Buffers) when latency is critical.
+* Avoid unnecessary object nesting.
+
+---
+
+### 2. **Cluster-Aware Redis Clients**
+
+#### Why It Matters:
+
+A non-cluster-aware Redis client may fail to route requests properly across shards or trigger unnecessary retries.
+
+#### Example:
+
+Use **Lettuce or Redisson** in Java/Spring Boot, which support Redis Cluster natively and understand slot mapping.
+
+#### Implication:
+
+Clients must understand how to interact with multiple nodes without requiring central routing.
+
+---
+
+### 3. **Multi-Key Operations Limitation in Redis Cluster**
+
+#### The Issue:
+
+Redis Cluster cannot perform operations like `MGET`, `MSET`, or transactions across keys on **different slots/nodes**.
+
+#### Example:
+
+```bash
+MGET key1 key2
+```
+
+Only works if `key1` and `key2` are on the same slot.
+
+#### Solution:
+
+* Use **hash tags**: Redis treats `{tag}` inside a key as part of the slot hash.
+
+```bash
+user:{123}:profile and user:{123}:order
+```
+
+Both go to the same node.
+
+---
+
+### 4. **Data Expiry and Memory Pressure Management**
+
+#### Scenario:
+
+When Redis memory is full, eviction policies kick in (e.g., LRU, LFU). However, under memory pressure:
+
+* Critical data may be evicted too soon
+* Cache miss rate may spike unexpectedly
+
+#### Solution:
+
+* Use proper **key categorization**: separate TTL for hot vs. cold data
+* Monitor eviction rates and set memory limits
+
+---
+
+### 5. **Security in Distributed Caching**
+
+#### Why It Matters:
+
+Redis by default is open over the network and doesn’t use TLS unless configured.
+
+#### Best Practices:
+
+* Enable **AUTH** and **TLS encryption**
+* Place Redis behind private networks or VPCs
+* Avoid exposing Redis directly to the internet
+
+---
+
+### 6. **Write Amplification Risk in Write-Behind Caching**
+
+#### Risk:
+
+If cache writes are batched and flushed to DB asynchronously, a crash may result in **data loss**.
+
+#### Mitigation:
+
+* Use **write-ahead logs** (if Redis supports it)
+* Ensure **flush confirmation** or hybrid consistency models
+
+---
+
+### 7. **Sidecar Caching**
+
+#### Emerging Pattern:
+
+Each service instance runs a **local cache proxy** (like Envoy + Redis) that interacts with a central distributed cache.
+
+#### Benefit:
+
+Reduces network latency, improves throughput, and isolates failures.
+
+---
+
+### ✅ Final Evaluation
+
+**What You’ve Covered**:
+
+* Cache types (local vs distributed)
+* Redis Cluster structure and operations
+* Cache invalidation strategies
+* Cache eviction and hotkey scenarios
+* Use cases and selection criteria
+
+**What’s Now Added**:
+
+* Serialization impact
+* Client selection for Redis Cluster
+* Hash tagging for key grouping
+* Memory management and eviction policies
+* Redis security configurations
+* Limitations in multi-key ops and how to solve
+* Advanced patterns like sidecar caching
+
+Together, this forms a **complete and production-grade understanding** of distributed caching in modern systems.
+
+---

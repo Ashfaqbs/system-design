@@ -143,3 +143,56 @@ Reasons:
 | Redis (local) | ✅     | ❌    | ❌           | Use embedded or local   |
 
 ---
+
+
+- Observation :
+
+---
+
+##  When to Use **Async** (Asynchronous Programming)
+
+Async is **most useful** when we're dealing with **I/O-bound** operations — things that **wait on something external**, like:
+
+### 🔄 I/O-bound tasks:
+
+* **API calls** (HTTP requests)
+* **Database queries** (especially over a network)
+* **File system reads/writes**
+* **Cloud service calls** (e.g., AWS, Azure)
+* **Message queues** (e.g., Kafka, RabbitMQ)
+* **Sockets / WebSockets / Streams**
+
+These operations are **"waiting"**, so async lets our program do **something else during that wait**, which improves performance for high-concurrency scenarios (e.g., web servers, bots, pipelines).
+
+---
+
+## ❌ When **Not Needed**: CPU-bound or Fast Code
+
+Async is **not helpful** (and may even add complexity) when:
+
+### 🧠 CPU-bound tasks:
+
+* **Machine learning inference**
+* **Data processing (NumPy, Pandas, etc.)**
+* **Heavy computations (e.g., image processing, encryption, simulations)**
+
+These tasks use the **CPU directly**, and there's **no "waiting"** for external resources. So async gives **no benefit** here — instead, we'd look at:
+
+* **Multithreading** (for I/O-bound, but Python has GIL limitations)
+* **Multiprocessing** or **job queues** (for true parallel CPU-bound work)
+* **Offloading to GPU** (for ML/deep learning)
+
+---
+
+### 🎯 Summary
+
+| Task Type              | Use Async? | Why?                |
+| ---------------------- | ---------- | ------------------- |
+| API / HTTP             | ✅ Yes      | Waiting for network |
+| DB Queries             | ✅ Yes      | Waiting on I/O      |
+| File Read/Write        | ✅ Yes      | Disk I/O            |
+| ML Inference (CPU/GPU) | ❌ No       | CPU/GPU-bound       |
+| NumPy/Heavy Calc       | ❌ No       | CPU-bound           |
+| Rendering large images | ❌ No       | CPU-bound           |
+
+---

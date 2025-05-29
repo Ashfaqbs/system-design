@@ -197,3 +197,164 @@ Always ensure **redundancy spans across zones/regions**.
 | External APIs      | Do we have retries/fallbacks if they fail?                |
 
 ---
+
+
+
+
+
+The **four architecture templates** for fault-tolerant system design based on the same functional flow:
+
+> **DNS → API Gateway → App Nodes → Database Cluster**
+
+Each version targets a different deployment model:
+
+1. **On-Prem (No Kubernetes)**
+2. **On-Prem (With Kubernetes)**
+3. **Cloud (No Kubernetes, Classic VMs/Services)**
+4. **Cloud (With Kubernetes)**
+
+---
+
+## 🔷 1. On-Premises (No Kubernetes)
+
+### 🔸 Assumptions
+
+* Bare-metal or VM servers in datacenter
+* Load balancing via HAProxy or F5
+* Manual failover or scripting
+* No auto-scaling
+
+### 🔹 Architecture Flow
+
+```
+Client
+  ↓
+Redundant DNS (e.g., Bind9 + secondary)
+  ↓
+F5 / HAProxy (Active-Passive or Active-Active)
+  ↓
+Multiple App Servers (Tomcat/Jetty)
+  ↓
+PostgreSQL Cluster (Patroni + etcd or repmgr)
+```
+
+### 🔹 SPOF Protections
+
+| Layer         | Technique                           |
+| ------------- | ----------------------------------- |
+| DNS           | Redundant DNS servers               |
+| Load Balancer | HA pair (keepalived or VRRP)        |
+| App Nodes     | N replicated stateless app servers  |
+| Database      | PostgreSQL HA cluster (w/ failover) |
+
+---
+
+## 🔷 2. On-Premises (With Kubernetes)
+
+### 🔸 Assumptions
+
+* K8s on VMs via kubeadm or RKE
+* Internal Load Balancer like MetalLB
+* Manual node scaling
+
+### 🔹 Architecture Flow
+
+```
+Client
+  ↓
+External DNS (bind9 / Route53) with Health Check
+  ↓
+MetalLB + Ingress (e.g., NGINX Ingress)
+  ↓
+K8s Deployment (Stateless Pods, ReplicaSet)
+  ↓
+PostgreSQL HA via StatefulSet (Patroni or Zalando operator)
+```
+
+### 🔹 SPOF Protections
+
+| Layer       | Technique                                |
+| ----------- | ---------------------------------------- |
+| DNS         | Redundant DNS services (failover config) |
+| API Gateway | IngressController + HPA                  |
+| App Nodes   | ReplicaSet with min 3 pods               |
+| Database    | PostgreSQL HA StatefulSet + PVCs         |
+
+---
+
+## 🔷 3. Cloud (Classic VM-Based, No Kubernetes)
+
+### 🔸 Assumptions
+
+* Compute: EC2 / GCP VM / Azure VM
+* Load Balancer: AWS ELB / Azure LB
+* DB: Managed or Self-Hosted Cluster
+
+### 🔹 Architecture Flow
+
+```
+Client
+  ↓
+Route53 / Cloud DNS
+  ↓
+Cloud Load Balancer (Multi-Zone)
+  ↓
+Auto-Scaled App Servers (Nginx + Spring Boot)
+  ↓
+Managed DB Cluster (e.g., Amazon RDS Multi-AZ)
+```
+
+### 🔹 SPOF Protections
+
+| Layer         | Technique                                 |
+| ------------- | ----------------------------------------- |
+| DNS           | Global DNS + health-based routing         |
+| Load Balancer | Cloud-native, zone-resilient              |
+| App Nodes     | VM auto-scaling group, stateless services |
+| Database      | RDS Aurora / Multi-AZ Postgres            |
+
+---
+
+## 🔷 4. Cloud (With Kubernetes)
+
+### 🔸 Assumptions
+
+* EKS / GKE / AKS
+* Cloud-native Load Balancers
+* Fully managed K8s
+
+### 🔹 Architecture Flow
+
+```
+Client
+  ↓
+Cloud DNS (Route53 / Cloudflare)
+  ↓
+Cloud LB + Ingress Controller (ALB + NGINX or Gateway API)
+  ↓
+Kubernetes Deployment (Spring Boot Pods, HPA enabled)
+  ↓
+Cloud-native DB Cluster (RDS / Cloud SQL)
+```
+
+### 🔹 SPOF Protections
+
+| Layer       | Technique                                     |
+| ----------- | --------------------------------------------- |
+| DNS         | Geo-distributed DNS + routing policies        |
+| API Gateway | HA Ingress (ALB/NLB + replicas)               |
+| App Nodes   | K8s Deployments with HPA + PDB + multiple AZs |
+| Database    | Managed multi-zone DB with replicas           |
+
+---
+
+## 🔸 Summary Table: 4 Templates
+
+| Layer      | On-Prem (No K8s)      | On-Prem (K8s)                | Cloud (No K8s)        | Cloud (K8s)                  |
+| ---------- | --------------------- | ---------------------------- | --------------------- | ---------------------------- |
+| DNS        | Bind9 + secondary     | Bind9 / Route53              | Route53 / Cloudflare  | Route53 / Cloudflare         |
+| LB/Gateway | F5 / HAProxy          | MetalLB + NGINX Ingress      | AWS ELB / Azure LB    | ALB + Ingress Controller     |
+| App Server | Bare VMs, Nginx + App | K8s Deployments (ReplicaSet) | Auto-scaled VMs       | K8s Deployments + HPA        |
+| DB Cluster | PostgreSQL + Patroni  | PostgreSQL StatefulSet       | RDS Aurora / Multi-AZ | Managed DB (RDS / Cloud SQL) |
+
+---

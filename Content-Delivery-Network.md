@@ -237,3 +237,138 @@ This is all handled via:
 ## Summary in 1 Line
 
 **Users don’t talk directly to the app server; their requests are routed to the nearest edge server via DNS and Anycast, and the edge server handles static assets or proxies to origin for fresh data.**
+
+
+
+
+##  Flow of Request (CDN + Edge Server + App)
+
+1. **User enters `mySampleApp.com` in the browser**.
+2. The **DNS resolves** to a **CDN edge server** closest to the user's region (using **GeoDNS** or **Anycast routing**).
+3. The **CDN edge server (nearest one)**:
+
+   * Checks if the **static content (JS, CSS, HTML, images)** is already **cached**.
+   * If **cached** → immediately serves it (**cache hit**).
+   * If **not cached** → fetches it from the **origin app server**, then **caches it** for the next request (**cache miss**).
+4. For **API calls or dynamic content** (e.g., `/api/orders`, `/api/user/123`):
+
+   * These requests usually **bypass the CDN** and go **directly to the backend app**.
+   * The backend app might be hosted in **one region** (e.g., Oregon), or across regions in a multi-region setup.
+   * The backend server talks to the **database**, processes, and returns dynamic content to the frontend.
+
+---
+
+##  Summary of What Happens and When
+
+| Content Type                           | Served From                             | Notes                                            |
+| -------------------------------------- | --------------------------------------- | ------------------------------------------------ |
+| Static files (JS, CSS, HTML, images)   | **CDN edge servers** (cached)           | Fastest access, reduces origin load              |
+| First-time static file request         | **CDN fetches from origin** → caches it | Cache miss followed by cache fill                |
+| API/data calls (user-specific/dynamic) | **Origin app/backend server**           | Not cached by CDN unless specifically configured |
+| CDN TTL expires                        | CDN re-fetches from origin              | Ensures freshness                                |
+
+---
+
+##  Extra Insight: Can API Calls Be Cached?
+
+Yes, but only:
+
+* If the data is **not user-specific or very frequently changing**, e.g., `/api/products/top-sellers`.
+* With correct **HTTP cache headers** (`Cache-Control`, `ETag`, etc.).
+* With **CDN rules** like those in **Cloudflare**, **Akamai**, or **Fastly**.
+
+For most **real-time or user-specific data**, caching is avoided to ensure data accuracy.
+
+---
+
+
+## 1. **How to Control What Gets Cached**
+
+###  A. **By File Type (Default CDN Behavior)**
+
+Most CDNs **automatically cache** static file types like:
+
+* `.js`, `.css`, `.png`, `.jpg`, `.html`, `.svg`, `.woff`, etc.
+
+### 🛠 B. **Manual CDN Rules (Configuration)**
+
+* On platforms like **Cloudflare**, **AWS CloudFront**, or **Akamai**, rules can be defined:
+
+  * **Which paths or extensions to cache**
+  * **What headers to ignore or respect**
+  * **How long to cache (TTL)**
+  * Whether to cache **API responses** or not
+
+> Example (CloudFront Rule):
+> `/static/*` → cache for 7 days
+> `/api/*` → do not cache
+
+---
+
+##  2. **By Code – Using HTTP Cache Headers**
+
+This is the **developer-controlled** method via backend responses or web server config:
+
+| Header          | Purpose                                                                             |
+| --------------- | ----------------------------------------------------------------------------------- |
+| `Cache-Control` | Defines caching policy (e.g., `max-age=3600`, `no-store`)                           |
+| `ETag`          | A unique content identifier for conditional caching                                 |
+| `Expires`       | Explicit expiration date/time                                                       |
+| `Vary`          | Indicates which headers CDN should consider when caching (e.g., `Vary: User-Agent`) |
+
+### Example: Static File Response Headers
+
+```http
+Cache-Control: public, max-age=86400
+ETag: "v1.3.4"
+```
+
+###  Example: API Response (no caching)
+
+```http
+Cache-Control: no-store, no-cache, must-revalidate
+```
+
+---
+
+##  3. **Manual Upload or Push (for CDN-backed storage)**
+
+For CDNs integrated with **object storage** like:
+
+* **S3 + CloudFront**
+* **Azure Blob + Azure CDN**
+* **Google Cloud Storage + Cloud CDN**
+
+Assets can be **manually uploaded**, and CDN pulls them (pull-based), or **explicitly pushed** to edge servers (push-based).
+
+---
+
+##  4. **Cache Invalidation / Purging**
+
+Sometimes, content needs to be updated **before TTL expires**:
+
+* Invalidate specific paths/files via CDN panel or CLI
+* Use **API-based purge** (e.g., Fastly, Akamai, Cloudflare offer this)
+* Use versioned file names (`main-v2.css`) so the browser/CDN sees it as new
+
+---
+
+##  Quick Scenario Flow
+
+* Backend serves static assets with headers: `Cache-Control: max-age=3600`
+* CDN caches these for 1 hour (controlled by header)
+* Developer updates `main.js`, uploads `main-v2.js`, updates index.html
+* CDN sees new file → caches that version too
+
+---
+
+##  Key Takeaway:
+
+* CDN behavior is a **contract** between:
+
+  * Developer-defined headers
+  * CDN rules
+  * File paths/types
+
+It’s fully controllable from both **code** and **infrastructure config**.
+

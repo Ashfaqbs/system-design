@@ -193,3 +193,93 @@ Flink’s architecture includes a **JobManager (master)** and **TaskManagers (sl
 | **Apache Flink**  | Yes (JobManagers & TaskManagers)     | ZooKeeper/K8s API    | Ensures failover for job scheduling    |
 
 ---
+
+
+
+
+
+## Important 
+
+##  Why is only one broker (leader) writing per partition, if the topic is spread across multiple brokers?
+
+---
+
+###  Key Concepts in Kafka:
+
+1. **Topic ≠ Partition ≠ Broker**
+
+   * A **topic** is a logical name.
+   * A **topic is divided into partitions**.
+   * Each **partition has a leader** broker and zero or more follower replicas.
+   * Kafka assigns partitions to brokers, and those brokers host the partition **leaders or followers**.
+
+---
+
+##  Leadership Model
+
+* **Each partition** has:
+
+  * **1 leader broker**: Handles all **reads and writes**.
+  * **0 or more followers**: Replicate data from the leader.
+
+###  Only the **leader** handles writes. The producer sends data **only to the partition leader**.
+
+* The followers are **passive**; they pull data from the leader and keep in sync.
+* They are used for **replication and fault-tolerance**, **not for writing directly**.
+
+---
+
+##  `acks=0`, `acks=1`, `acks=all` in context
+
+| Setting    | What happens?                                                                                                                           |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `acks=0`   | Producer doesn’t wait for **any response** — fastest, but risky (fire-and-forget).                                                      |
+| `acks=1`   | Producer waits for **leader only** to ack the write. If leader crashes before followers sync → possible data loss.                      |
+| `acks=all` | Producer waits until **all in-sync replicas** (leader + followers that are caught up) confirm they got the message. Safest, but slower. |
+
+---
+
+##  Example:
+
+Suppose:
+
+* Topic `my-topic` has **3 partitions**: `P0`, `P1`, `P2`.
+* Cluster has **3 brokers**: `B1`, `B2`, `B3`.
+* Partition assignment:
+
+  * `P0`: Leader on `B1`, follower on `B2`
+  * `P1`: Leader on `B2`, follower on `B3`
+  * `P2`: Leader on `B3`, follower on `B1`
+
+### What happens:
+
+* Producer sends message for `P1` → it goes to **leader broker B2**.
+* Followers (e.g., B3) **replicate** the data from B2.
+* **Only one broker per partition is the leader** — and only **that broker** gets writes.
+
+---
+
+###  Why This Matters:
+
+This design:
+
+* Prevents **write conflicts** or split-brain.
+* Makes Kafka **linearly scalable**: each partition is **append-only**, ordered, and handled by **one leader**.
+* Allows efficient **replication and fault recovery** (leader election if one goes down).
+
+---
+
+##  Final Summary:
+
+* Topics are spread across partitions → **each partition has one leader**.
+* **Only the leader broker of each partition accepts writes**.
+* `acks` controls how **much replication confirmation** the producer waits for:
+
+  * `0`: none
+  * `1`: just the leader
+  * `all`: leader + all in-sync replicas (followers)
+
+---
+
+
+

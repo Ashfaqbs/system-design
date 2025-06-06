@@ -1,4 +1,4 @@
-**Request-Response vs. Event-Driven Architecture: A Comparative Analysis**([medium.com][1])
+**Request-Response vs. Event-Driven Architecture: A Comparative Analysis**
 
 ---
 
@@ -16,12 +16,12 @@
 
 * **User Authentication**: Login processes requiring immediate validation.
 * **Payment Processing**: Transactions needing instant confirmation.
-* **CRUD Operations**: Basic create, read, update, delete operations where immediate feedback is essential.([geeksforgeeks.org][2], [blog.axway.com][3])
+* **CRUD Operations**: Basic create, read, update, delete operations where immediate feedback is essential.
 
 **Advantages**:
 
 * **Simplicity**: Straightforward to implement and understand.
-* **Predictability**: Deterministic behavior with clear request-response cycles.([blog.getambassador.io][4])
+* **Predictability**: Deterministic behavior with clear request-response cycles.
 
 **Disadvantages**:
 
@@ -39,7 +39,7 @@
 
 * **Asynchronous Communication**: Services operate independently, reacting to events as they occur.
 * **Loose Coupling**: Services are unaware of each other's existence, promoting independence.
-* **Scalability**: Easily handles high volumes of events and data.([pubnub.com][5])
+* **Scalability**: Easily handles high volumes of events and data.
 
 **Use Cases**:
 
@@ -57,7 +57,7 @@
 
 * **Complexity**: Harder to design, implement, and debug due to asynchronous nature.
 * **Event Management**: Requires robust infrastructure for event handling and storage.
-* **Eventual Consistency**: Data consistency is achieved over time, which may not be suitable for all applications.([arxiv.org][6])
+* **Eventual Consistency**: Data consistency is achieved over time, which may not be suitable for all applications.
 
 ---
 
@@ -71,8 +71,7 @@
 | Resilience           | Lower                       | Higher                           |                                                                                 |
 | Complexity           | Lower                       | Higher                           |                                                                                 |
 | Data Consistency     | Immediate                   | Eventual                         |                                                                                 |
-| Use Case Suitability | Real-time feedback required | High-volume, decoupled processes | ([medium.com][7], [aws.amazon.com][8], [reddit.com][9], [geeksforgeeks.org][2]) |
-
+| Use Case Suitability | Real-time feedback required | High-volume, decoupled processes |
 ---
 
 ### **4. Transitioning Between Architectures: Practical Scenarios**
@@ -83,20 +82,20 @@
 
 * Tight coupling between services leading to a brittle system.
 * Difficulty in scaling individual components.
-* Increased latency due to synchronous calls.([geeksforgeeks.org][2])
+* Increased latency due to synchronous calls.
 
 **Event-Driven Solution**:
 
 * Decouple services by emitting events such as "Order Placed," "Payment Processed," and "Inventory Updated."
 * Allow services to subscribe to relevant events and act independently.
-* Enhance scalability and resilience by isolating failures.([medium.com][1])
+* Enhance scalability and resilience by isolating failures.
 
-**Scenario B**: Using an event-driven model for user authentication.([geeksforgeeks.org][2])
+**Scenario B**: Using an event-driven model for user authentication.
 
 **Challenges**:
 
 * Delayed feedback to users due to asynchronous processing.
-* Complexity in ensuring data consistency and security.([geeksforgeeks.org][2])
+* Complexity in ensuring data consistency and security.
 
 **Request-Response Solution**:
 
@@ -116,15 +115,3 @@ The choice between request-response and event-driven architectures depends on sp
 In many cases, a hybrid approach leveraging both architectures can provide the benefits of each, aligning with the diverse needs of modern applications.
 
 ---
-
-- References:
-
-[1]: https://medium.com/devdotcom/event-driven-architecture-vs-request-response-a-practical-comparison-aadc68efea0c.com "Event-Driven Architecture vs Request-Response - Medium"
-[2]: https://www.geeksforgeeks.org/request-driven-vs-event-driven-microservices/.com "Request-driven vs Event-driven Microservices - GeeksforGeeks"
-[3]: https://blog.axway.com/learning-center/apis/basics/event-driven-vs-rest-api-interactions.com "Event-Driven APIs vs. REST: Choosing the Right Integration Strategy"
-[4]: https://blog.getambassador.io/request-driven-restful-vs-event-driven-in-microservices-82798cba80d5.com "Request-Driven (RESTful) vs Event-Driven in Microservices"
-[5]: https://www.pubnub.com/blog/the-benefits-of-event-driven-architecture/.com "The Benefits of Event-Driven Architecture - PubNub"
-[6]: https://arxiv.org/abs/2408.00440.com "An Empirical Study on Challenges of Event Management in Microservice Architectures"
-[7]: https://medium.com/%40kumarabhishek0388/beyond-request-response-understanding-the-event-driven-architecture-e1ede3665db1.com "Beyond Request-Response: Understanding the Event-Driven ..."
-[8]: https://aws.amazon.com/blogs/compute/benefits-of-migrating-to-event-driven-architecture/.com "Benefits of migrating to event-driven architecture | AWS Compute Blog"
-[9]: https://www.reddit.com/r/microservices/comments/1c880z4/eventdriven_architectures_vs_request_response/.com "Event-Driven Architectures vs. Request Response lightboard ..."

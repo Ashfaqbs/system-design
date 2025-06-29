@@ -104,3 +104,81 @@ This only holds true for **simpler setups**. In enterprise-grade architectures:
 | **LTM**   | Local  | Distributes traffic to backend servers locally |
 
 ---
+
+
+## Sample Example: 
+
+### **Step-by-Step Flow When a URL (like `amazon.com`) Is Accessed**
+
+---
+
+#### **1. DNS Resolution (System + Global)**
+
+* When `amazon.com` is typed:
+
+  * The system first checks **local DNS cache** (on OS or browser).
+  * If not found, the query moves up to the **configured DNS resolver** (e.g., ISP or Google's 8.8.8.8).
+  * Eventually, the **authoritative DNS server** for `amazon.com` is contacted.
+
+This **authoritative DNS** is often managed by a **GTM (Global Traffic Manager)** or equivalent service.
+
+---
+
+#### **2. GTM Decision: Region Selection**
+
+* GTM inspects:
+
+  * The **source IP** of the requester (to infer geolocation).
+  * The **latency, load, or health** of data centers.
+* Based on this, GTM **resolves the DNS query** to a **VIP (Virtual IP)** that maps to the **closest or healthiest regional data center**.
+
+> For example:
+> A user from India may get routed to a Mumbai-region data center, while a user from California may be sent to the Oregon-region data center.
+
+---
+
+#### **3. LTM Activation: Local Routing**
+
+* That VIP points to a **regional Load Balancer (LTM – Local Traffic Manager)**.
+* LTM handles:
+
+  * SSL termination (offloading HTTPS).
+  * Load balancing between **multiple application instances** or microservices.
+  * Health checks for backend services.
+  * Traffic routing logic (e.g., path-based routing, blue-green deployments, A/B testing).
+
+> If **no LTM is present**, then the GTM can route directly to an application instance or reverse proxy (not common in production-grade systems).
+
+---
+
+#### **4. App Instance Serves the Request**
+
+* Once traffic is passed to the app server:
+
+  * Business logic is executed.
+  * DB/cache/queue interactions are triggered.
+  * A response is generated and sent back through the same path (App → LTM → client).
+
+---
+
+### **Key Observations from the Flow**
+
+| Layer          | Role                                                                                     |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| **DNS System** | Converts domain name to IP address via global DNS registry                               |
+| **GTM**        | Decides **which region** (data center or cloud region) the user should go to             |
+| **LTM**        | Decides **which app server** or microservice within the region should handle the request |
+| **App**        | Business logic lives here                                                                |
+
+---
+
+### Summary: 
+
+The request flows like this:
+
+1. Domain entered → DNS resolver → GTM picks a region → resolves to IP.
+2. IP points to **an LTM** or directly to app (in rare cases).
+3. LTM **distributes** the request to a backend app server based on rules.
+4. App processes the request and sends back a response.
+
+---

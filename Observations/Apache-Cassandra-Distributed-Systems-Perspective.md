@@ -4,7 +4,9 @@
 
 ### 1.1 Overview of Apache Cassandra
 
-Apache Cassandra is a distributed, wide-column NoSQL database designed for high availability, linear scalability, and fault tolerance. Originating from Facebook and later open-sourced, Cassandra implements a decentralized peer-to-peer architecture and is optimized for write-intensive workloads. It fits into the "wide-column store" category of NoSQL databases, leveraging denormalized and query-driven schema design to facilitate distributed storage across commodity hardware.
+Apache Cassandra is a distributed, wide-column NoSQL database designed for high availability, linear scalability, and fault tolerance. In the context of NoSQL, a wide-column store organizes data into rows and dynamic columns grouped into column families (similar to tables), enabling denormalized and efficient read/write paths. For example, an event log might store user actions with different column sets per user. Originating from Facebook and later open-sourced, Cassandra implements a decentralized peer-to-peer architecture, where all nodes are equal (no master), and each can handle read and write requests independently. This model eliminates single points of failure and enables fault-tolerant data replication.
+
+Cassandra is optimized for write-intensive workloads because it uses append-only writes to a commit log and in-memory memtables. These are later flushed to immutable SSTables, avoiding random disk I/O. This model supports high-throughput ingestion, such as time-series, telemetry, or log data.
 
 ### 1.2 MongoDB Summary and Contrast
 
@@ -23,25 +25,33 @@ MongoDB is a document-oriented NoSQL database that stores data in flexible, JSON
 
 ### 2.1 Cluster Hierarchy
 
-* **Cluster**: Logical grouping of all nodes managing a dataset.
-* **Data Center**: Subdivision of a cluster, often mapped to physical or cloud regions.
-* **Node**: The fundamental unit of storage and compute within a cluster.
+* **Cluster**: Logical grouping of all nodes managing a dataset. Each cluster manages a distributed and replicated dataset.
+* **Data Center**: Logical grouping of nodes, often mapped to a geographic or cloud region, allowing for optimized data locality and consistency.
+* **Node**: A single machine that stores a subset of the data. Each node is symmetric in function.
 
 ### 2.2 Data Distribution
 
-* **Partition Key**: Determines the node responsible for storing a row; used to compute a token.
-* **Token Ranges**: The token space is divided across nodes using consistent hashing.
-* **Consistent Hashing**: Allows dynamic node scaling with minimal data movement.
+* **Partition Key**: The key that determines the token value for a row. All rows with the same partition key are stored together. It is used to calculate the token using a hash function.
+* **Token Ranges**: The full hash space is divided into contiguous token ranges, each assigned to nodes. For example, if the hash space is from 0 to 2^127, each node holds a fraction of this range.
+* **Consistent Hashing**: Enables even data distribution and supports cluster scaling with minimal data shuffling. Adding a node results in token reassignment for a fraction of the data.
 
 ### 2.3 Replication and Consistency
 
-* **Replication Factor (RF)**: Defines how many replicas of data exist within a data center.
-* **Consistency Levels**:
+* **Replication Factor (RF)**: The number of nodes that will receive a copy of each partition. For RF=3, each partition is stored on three different nodes.
 
-  * `ONE`, `TWO`, `THREE`: Number of nodes that must acknowledge.
-  * `QUORUM`: Majority of replicas across the cluster or local DC.
-  * `ALL`: All replicas must acknowledge.
-  * `LOCAL_QUORUM`, `EACH_QUORUM`: Used in multi-DC setups.
+Replication ensures fault tolerance for both read and write operations. For instance, if one node is down, another replica can fulfill the request.
+
+* **Consistency Levels**: Define how many replica nodes must acknowledge an operation:
+
+  * `ONE`, `TWO`, `THREE`: Requires acknowledgment from 1, 2, or 3 nodes respectively.
+  * `QUORUM`: Requires acknowledgment from a majority of replicas (`⌈(RF / 2) + 1⌉`).
+  * `ALL`: Requires acknowledgment from all replicas.
+  * `LOCAL_QUORUM`, `EACH_QUORUM`: Confine quorum to the local or every data center in multi-DC setups.
+
+Consistency is required because data across nodes may temporarily diverge. Each node stores only a portion of the data and may be temporarily unavailable. A write at lower consistency might not reach all replicas immediately, causing temporary inconsistency.
+
+---
+
 
 ### 2.4 Supporting Mechanisms
 

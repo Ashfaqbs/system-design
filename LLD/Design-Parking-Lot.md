@@ -37,3 +37,53 @@
 * **Number of Exits:** 1
 
 > ✅ System should support **multiple gates** (entry/exit) in future if needed.
+
+
+---
+
+### **Code Objects Involved**
+
+#### **1. `Vehicle ` (Enum)**
+* `licenseNumber`
+* `Vehicle_Type` (Enum) : 
+  *  `TWO_WHEELER`
+  * `FOUR_WHEELER`
+
+---
+
+#### **2. `Ticket`**
+
+* `entryTime: LocalDateTime`
+* `parkingSpot: ParkingSpot`
+
+---
+
+#### **3. `EntranceGate`**
+
+**Responsibilities/Functions:**
+
+* `findParkingSlot(vehicleType: VehicleType): ParkingSpot`
+* `updateParkingSpace(parkingSpot: ParkingSpot): void`
+* `generateTicket(parkingSpot: ParkingSpot, vehicle: Vehicle): Ticket`
+
+---
+
+#### **4. `ParkingSpot`**
+
+**Attributes:**
+
+* `id: String`
+* `isEmpty: boolean`
+* `vehiclePrice: int` *(₹ per minute, based on vehicle type)*
+* `type: VehicleType`
+* `vehicle: Vehicle` *(reference to the parked vehicle)*
+
+---
+
+#### **5. `ExitGate`**
+
+**Responsibilities/Functions:**
+
+* `costCalculation(ticket: Ticket): int`
+* `payment(amount: int): boolean`
+* `updateParkingSpot(parkingSpot: ParkingSpot): void` *(Free up the spot)*

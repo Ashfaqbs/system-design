@@ -133,3 +133,65 @@ They group threads into warps and blocks, and schedule them across SMs. This str
 * [OpenCL Specification](https://www.khronos.org/opencl/)
 * [AMD ROCm](https://rocmdocs.amd.com/en/latest/)
 * [SYCL Programming Guide](https://www.khronos.org/sycl/)
+
+
+- My rough understanding: 
+
+## 1. The Base System
+
+* **OS**: The traffic controller. It schedules processes, manages memory, and decides what runs where.
+* **CPU**: General-purpose processor with a handful of powerful cores. Each core = a small “brain” capable of handling varied tasks.
+* **GPU**: A *separate co-processor* with thousands of lightweight cores designed for math-heavy, parallel work.
+* **RAM**: Fast, volatile memory for active programs.
+* **ROM/Storage (SSD/HDD)**: Permanent storage (programs are saved here before running).
+
+---
+
+## 2. How a Program Runs
+
+1. **Storage → RAM**: The program is stored on ROM/SSD, loaded into RAM when executed.
+2. **CPU executes**: CPU cores start executing instructions, managing logic and data flow.
+3. **Low intensity**: If the workload is small (e.g., browsing, text editing), CPU handles it alone.
+
+---
+
+## 3. When Workload is “Heavy”
+
+* Examples: **ML/DL**, video rendering, 4K/8K games.
+* Why? These require **repeating the same formula (matrix math, pixel shading) millions of times**.
+* CPU detects (via program/framework) that the workload is parallelizable and **delegates** part of the work to GPU.
+
+---
+
+## 4. CPU ↔ GPU Interaction
+
+* **APIs (CUDA, OpenCL, Vulkan, DirectX, etc.)**: The bridge. They allow CPU to send instructions + data chunks to GPU.
+* **GPU Runtime (CUDA runtime, ROCm, etc.)**: Ensures GPU cores receive tasks efficiently.
+* **VRAM**: GPU’s local memory. Data must be copied from RAM → VRAM for GPU to use. Results come back the same way.
+
+---
+
+## 5. Execution Flow Example
+
+* You run a deep learning model in PyTorch.
+* CPU (via CUDA) sends tensors (big matrices) into GPU VRAM.
+* GPU performs matrix multiplications across **thousands of cores in parallel**.
+* Results are returned to CPU, which continues orchestration (like updating weights, managing loop).
+
+---
+
+⚡ Simplified mental model:
+
+* **CPU** = Few smart workers (flexible, general tasks).
+* **GPU** = Thousands of interns (math grunt work, massive scale).
+* **RAM** = Shared workspace.
+* **VRAM** = GPU’s private whiteboard.
+* **APIs (CUDA etc.)** = Messenger between CPU and GPU.
+
+We have an operating system (OS) running on a computer with a CPU, which contains multiple cores—essentially independent processors. There's also a GPU, a co-processor designed for parallel computation, as well as RAM (volatile memory) and ROM (non-volatile memory).
+
+A program stored in ROM can be loaded and executed by the CPU. For lightweight tasks, the CPU handles the computation using its cores, stores intermediate data in RAM, and completes the task efficiently.
+
+However, when the workload is computationally intensive—such as machine learning (ML), deep learning (DL), or high-resolution video processing (like 4K)—the same logic must be applied to a much larger volume of data. In such cases, the CPU offloads these heavy computations to the GPU using APIs like CUDA.
+
+The GPU, equipped with thousands of smaller cores optimized for parallel processing, performs the required computations. It uses its own dedicated memory, called VRAM (Video RAM), to manage data during processing. Once completed, the results are passed back to the CPU for further handling.

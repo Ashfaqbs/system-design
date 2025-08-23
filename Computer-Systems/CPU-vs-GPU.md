@@ -135,6 +135,100 @@ They group threads into warps and blocks, and schedule them across SMs. This str
 * [SYCL Programming Guide](https://www.khronos.org/sycl/)
 
 
+— This is the **heart** of why GPUs became central to both **graphics rendering** and **AI/ML/DL**. the principle: **parallel math**.
+
+---
+
+# 1. Why ML/DL Models Are Computationally Intensive
+
+At their core, ML/DL models (especially neural networks) are built on **linear algebra**:
+
+$$
+y = f(Wx + b)
+$$
+
+Where:
+
+* **W** = weight matrix
+* **x** = input vector
+* **b** = bias
+* **f** = activation function
+
+### What happens during training?
+
+* **Forward pass**: Multiply huge matrices (inputs × weights).
+* **Backward pass (backpropagation)**: Compute derivatives (gradients) of loss with respect to weights.
+* **Update weights**: Adjust parameters with optimization (like gradient descent).
+
+👉 Every layer = millions or billions of **multiplications + additions**.
+👉 Large models (GPT, ResNet, etc.) = trillions of operations.
+
+**Why CPU struggles:** CPU cores are optimized for control logic and sequential flow. Doing billions of identical multiplications is inefficient.
+
+**Why GPU shines:** Each neuron’s math is *independent*. That means 1,000 or 10,000 multiplications can be done **at the same time** → perfect for parallel cores.
+
+---
+
+# 2. Why Rendering 4K Images/Videos Is Computationally Intensive
+
+### Example: A single **4K frame**
+
+* Resolution = 3840 × 2160 ≈ **8.3 million pixels**.
+* Each pixel requires:
+
+  * Color calculations
+  * Shading (light, reflection, shadow)
+  * Texture mapping
+  * Sometimes physics/particle effects
+
+And in video:
+
+* 4K at 60 fps = **8.3M × 60 = \~500 million pixels per second**.
+* Each pixel needs dozens of math operations.
+* Total = **tens of billions of operations per second**.
+
+👉 Again, the same formulas are repeated for every pixel.
+
+**Why CPU struggles:** Only a few cores → sequentially too slow to compute each pixel.
+**Why GPU shines:** Thousands of cores process millions of pixels in parallel.
+
+---
+
+# 3. How GPU Handles This
+
+### Architecture advantage:
+
+* **Thousands of CUDA cores**: Each core handles one piece of data (a neuron’s output, a pixel’s shade, etc.).
+* **SIMT (Single Instruction, Multiple Threads)**: GPU issues *one instruction* (e.g., multiply two numbers) across thousands of threads simultaneously.
+* **Memory bandwidth**: GPU VRAM has massive throughput (up to 1 TB/s in high-end GPUs), feeding data to cores without bottlenecks.
+
+### Example flow:
+
+1. CPU prepares data (batch of images, or a video frame).
+2. CPU sends data → GPU VRAM.
+3. GPU **launches a kernel** (a function executed by thousands of threads).
+4. Threads are grouped into **warps (e.g., 32 threads)** and scheduled onto **Streaming Multiprocessors (SMs)**.
+5. Each thread works on a pixel/neuron independently.
+6. Results are written back to VRAM → CPU collects results.
+
+---
+
+# 4. One Formula, Many Data Points
+
+The common pattern is:
+
+* **Formula is simple** (matrix multiply, shading function).
+* **Volume is massive** (millions of pixels, billions of neurons).
+* GPU = specialized to blast through *volume* by doing many instances of the same math simultaneously.
+
+---
+
+✅ So whether it’s **deep learning models** or **4K graphics**, the bottleneck isn’t the formula’s *complexity* but its *scale*.
+
+* CPU: Fast for one formula at a time.
+* GPU: Fast for a million formulas in parallel.
+
+
 - My rough understanding: 
 
 ## 1. The Base System

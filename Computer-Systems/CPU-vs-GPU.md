@@ -131,7 +131,5 @@ They group threads into warps and blocks, and schedule them across SMs. This str
 
 * [NVIDIA CUDA Programming Guide](https://developer.nvidia.com/cuda-zone)
 * [OpenCL Specification](https://www.khronos.org/opencl/)
-* [NVIDIA GPU Architecture Overview](https://developer.nvidia.com/gpu-architecture)
 * [AMD ROCm](https://rocmdocs.amd.com/en/latest/)
-* [Introduction to Parallel Programming (Udacity & NVIDIA)](https://developer.nvidia.com/udacity-cs344-intro-parallel-programming)
 * [SYCL Programming Guide](https://www.khronos.org/sycl/)

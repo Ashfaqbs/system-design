@@ -37,9 +37,7 @@ Storage capacity planning is the process of estimating how much storage an appli
   * Together this represents a **40% total write fraction** of all requests.
 * Effective stored TPS is therefore:
 
-  $$
-  T_{eff} = TPS \times \text{Write Fraction}
-  $$
+`T_eff = TPS × Write Fraction`
 
 ### Step 3: Average Record Size
 
@@ -59,29 +57,21 @@ Storage capacity planning is the process of estimating how much storage an appli
 
   * Formula:
 
-    $$
-    \text{MB/s} = T_{eff} \times \frac{\text{Record Size (KB)}}{1000}
-    $$
+
+`MB/s = T_eff × (Record Size (KB) / 1000)`
 
 ### Step 5: Data Growth Over Time
 
 * Daily Growth:
-
-  $$
-  \text{GB/day} = \text{MB/s} \times 86,400 / 1000
-  $$
-
+  `GB/day = MB/s × 86,400 / 1000`
+  
   Basis: 86,400 seconds in a day.
+
 * Monthly Growth:
+  `TB/month = GB/day × 30 / 1000`
 
-  $$
-  \text{TB/month} = \text{GB/day} \times 30 / 1000
-  $$
 * Yearly Growth:
-
-  $$
-  \text{TB/year} = \text{GB/day} \times 365 / 1000
-  $$
+  `TB/year = GB/day × 365 / 1000`
 
 ### Step 6: Real-World Multipliers
 
@@ -93,9 +83,9 @@ Raw storage estimates are adjusted with system-level multipliers:
 * **Compression (C):** Reduction factor if data is compressed (e.g., JSON compresses to 0.5–0.7 of original).
 * Final capacity:
 
-  $$
-  \text{TB/year(real)} = \text{TB/year(raw)} \times R \times I \times A \times C
-  $$
+
+`TB/year(real) = TB/year(raw) × R × I × A × C`
+
 
 ---
 

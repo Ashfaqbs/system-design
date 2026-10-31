@@ -1,0 +1,58 @@
+C:\tmp\code\side-car>curl -X POST http://localhost:8080/orders -H "Content-Type: application/json" -d "{\"drink\":\"latte\",\"size\":\"medium\",\"extra\":\"extra shot\"}"
+Order placed successfully: latte
+C:\tmp\code\side-car>curl -X POST http://localhost:8080/orders -H "Content-Type: application/json" -d "{\"drink\":\"latte\",\"size\":\"medium\",\"extra\":\"extra shot\"}"
+Order placed successfully: latte
+C:\tmp\code\side-car>curl -X POST http://localhost:8080/orders -H "Content-Type: application/json" -d "{\"drink\":\"latte\",\"size\":\"medium\",\"extra\":\"extra shot\"}"
+Order placed successfully: latte
+C:\tmp\code\side-car>curl -X POST http://localhost:8080/orders -H "Content-Type: application/json" -d "{\"drink\":\"latte\",\"size\":\"medium\",\"extra\":\"extra shot\"}"
+Order placed successfully: latte
+C:\tmp\code\side-car>
+
+
+Springboot Logs
+
+C:\tmp\code\side-car> cmd /C "C:\openjdk\graalvm-jdk-21.0.4+8.1\bin\java.exe @C:\Users\ashfa\AppData\Local\Temp\cp_cseebtmf0ou2mggl58yud28qx.argfile com.example.order_service.OrderServiceApplication "
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.3)
+
+2025-02-24T21:02:20.517+05:30  INFO 14044 --- [Order-Service ] [           main] c.e.o.OrderServiceApplication            : Starting OrderServiceApplication using Java 21.0.4 with PID 14044 (C:\tmp\code\side-car\coffee-order-service\target\classes started by ashfa in C:\tmp\code\side-car)
+2025-02-24T21:02:20.519+05:30  INFO 14044 --- [Order-Service ] [           main] c.e.o.OrderServiceApplication            : No active profile set, falling back to 1 default profile: "default"
+2025-02-24T21:02:21.265+05:30  INFO 14044 --- [Order-Service ] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-24T21:02:21.277+05:30  INFO 14044 --- [Order-Service ] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-24T21:02:21.278+05:30  INFO 14044 --- [Order-Service ] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-02-24T21:02:21.323+05:30  INFO 14044 --- [Order-Service ] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-24T21:02:21.324+05:30  INFO 14044 --- [Order-Service ] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 762 ms
+2025-02-24T21:02:21.773+05:30  INFO 14044 --- [Order-Service ] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-24T21:02:21.780+05:30  INFO 14044 --- [Order-Service ] [           main] c.e.o.OrderServiceApplication            : Started OrderServiceApplication in 1.593 seconds (process running for 1.875)
+2025-02-24T21:03:49.002+05:30  INFO 14044 --- [Order-Service ] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-24T21:03:49.002+05:30  INFO 14044 --- [Order-Service ] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-24T21:03:49.002+05:30  INFO 14044 --- [Order-Service ] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+Order received: latte, medium, extra shot
+Order received: latte, medium, extra shot
+Order received: latte, medium, extra shot
+Order received: latte, medium, extra shot
+
+
+
+Flask Logs:
+
+C:\tmp\code\side-car>C:/Users/ashfa/AppData/Local/Programs/Python/Python312/python.exe c:/tmp/code/side-car/coffee-analytics-sidecar/app.py
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://localhost:5000
+Press CTRL+C to quit
+127.0.0.1 - - [24/Feb/2025 21:03:49] "POST /track HTTP/1.1" 200 -
+127.0.0.1 - - [24/Feb/2025 21:05:11] "POST /track HTTP/1.1" 200 -
+127.0.0.1 - - [24/Feb/2025 21:05:12] "POST /track HTTP/1.1" 200 -
+127.0.0.1 - - [24/Feb/2025 21:05:12] "POST /track HTTP/1.1" 200 -
+
+
+
